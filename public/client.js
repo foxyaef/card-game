@@ -45,7 +45,7 @@ socket.on("yourTurn", (data) => {
 });
 
 socket.on("roundResult", (data) => {
-  if (data.tie) alert("무승부! 팟 이월됩니다.");
+  if (data.tie) alert(`무승부! 두 플레이어 중 랜덤으로 ${data.pot}칩 획득`);
   else if (data.winner === myId) alert(`🎉 이겼습니다! ${data.pot} 칩 획득`);
   else alert("😢 졌습니다!");
   document.getElementById("actions").style.display = "none";
@@ -85,4 +85,7 @@ socket.on("chat", (msg) => {
   line.innerText = msg;
   box.appendChild(line);
   box.scrollTop = box.scrollHeight;
+});
+document.getElementById("help-btn").addEventListener("click", () => {
+  document.getElementById("help-modal").style.display = "block";
 });

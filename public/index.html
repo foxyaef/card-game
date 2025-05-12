@@ -115,5 +115,70 @@
 
       <div id="message"></div>
     </div>
+    <!-- ? 아이콘 버튼 -->
+    <button
+      id="help-btn"
+      style="
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(255, 255, 255, 0.3);
+        border: none;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        font-size: 20px;
+        color: #fff;
+        cursor: pointer;
+      "
+    >
+      ?
+    </button>
+
+    <!-- 모달 -->
+    <div
+      id="help-modal"
+      style="
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: #222;
+        color: #fff;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        z-index: 9999;
+        width: 300px;
+        text-align: left;
+      "
+    >
+      <h3>게임 룰 설명</h3>
+      <ul style="font-size: 0.9rem; padding-left: 20px">
+        <li>1~10 카드 2세트로 게임 진행</li>
+        <li>자신의 카드는 볼 수 없고 상대만 보임</li>
+        <li>방장이 선턴, 참여자가 후턴</li>
+        <li>자유 배팅, 상대는 콜/폴드/레이즈 가능</li>
+        <li>콜로 베팅 총액 같아지면 즉시 정산</li>
+        <li>무승부일 경우 랜덤으로 한 명이 팟 획득</li>
+        <li>10으로 포기 시 10칩 벌금</li>
+        <li>칩 0되면 게임 종료</li>
+      </ul>
+      <button
+        onclick="document.getElementById('help-modal').style.display='none'"
+        style="
+          margin-top: 10px;
+          padding: 8px 12px;
+          border: none;
+          background: #fff;
+          color: #000;
+          border-radius: 8px;
+          cursor: pointer;
+        "
+      >
+        닫기
+      </button>
+    </div>
   </body>
 </html>

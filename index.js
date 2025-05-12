@@ -180,11 +180,14 @@ function handleFold(roomId, playerId) {
 }
 
 function resolveRound(roomId) {
-  const room = rooms[roomId];
-  const [p1, p2] = room.players;
-  if (p1.hand === p2.hand) {
-    io.to(roomId).emit("roundResult", { tie: true, pot: room.pot });
-    return nextRound(roomId);
+    const randomWinner = Math.random() < 0.5 ? p1 : p2;
+    randomWinner.chips += room.pot;
+    io.to(roomId).emit("roundResult", {
+      winner: randomWinner.id,
+      pot: room.pot,
+      random: true,
+    });
+    return checkGameOver(roomId) || nextRound(roomId);
   }
   const winner = p1.hand > p2.hand ? p1 : p2;
   winner.chips += room.pot;
