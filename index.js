@@ -109,6 +109,17 @@ function handleBet(roomId, playerId, amount) {
   const opponent = room.players[1 - idx];
   const callAmt = room.bets[opponent.id] - room.bets[player.id];
 
+  if (callGap > 0 && opponent.chips < callGap) {
+    io.to(playerId).emit(
+      "message",
+      `상대방이 ${callGap}칩을 낼 수 없어 게임을 종료시킬 수 없습니다.`
+    );
+    io.to(playerId).emit("yourTurn", {
+      opponentBet: room.bets[opponent.id],
+    });
+    return;
+  }
+  const callGap = room.bets[player.id] + amount - room.bets[opponent.id];
   if (amount < callAmt) {
     io.to(playerId).emit("message", `최소 ${callAmt}칩 이상 베팅해야 합니다.`);
 
@@ -196,6 +207,13 @@ function resolveRound(roomId) {
   winner.chips += room.pot;
   io.to(roomId).emit("roundResult", { winner: winner.id, pot: room.pot });
   checkGameOver(roomId) || nextRound(roomId);
+  const hostCard = room.players[0].hand;
+  const guestCard = room.players[1].hand;
+
+  io.to(roomId).emit(
+    "chat",
+    `[라운드 결과] 방장: ${hostCard}, 참여자: ${guestCard}`
+  );
 }
 
 function nextRound(roomId) {
