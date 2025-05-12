@@ -64,16 +64,23 @@ function startGame(roomId) {
     room.pot += 1;
   });
 
-  // 랜덤으로 선 플레이어 결정 (0 또는 1)
   room.currentTurn = Math.floor(Math.random() * 2);
-  room.bets = { [room.players[0].id]: 0, [room.players[1].id]: 0 };
+  room.bets = {
+    [room.players[0].id]: 0,
+    [room.players[1].id]: 0,
+  };
+  room.lastBetter = room.players[room.currentTurn].id;
 
-  io.to(roomId).emit("startRound", {
-    opponentHands: room.players.map((p) => p.hand),
-    players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
-    pot: room.pot,
-    startPlayer: room.players[room.currentTurn].id,
+  room.players.forEach((player, i) => {
+    const opponent = room.players[1 - i];
+    io.to(player.id).emit("startRound", {
+      opponentHands: [opponent.hand],
+      players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
+      pot: room.pot,
+      startPlayer: room.players[room.currentTurn].id,
+    });
   });
+
   io.to(room.players[room.currentTurn].id).emit("yourTurn");
 }
 
@@ -84,27 +91,43 @@ function handleBet(roomId, playerId, amount) {
     io.to(playerId).emit("message", "지금은 당신의 턴이 아닙니다.");
     return;
   }
+
   const player = room.players[idx];
   const opponent = room.players[1 - idx];
-  const callAmt = room.bets[opponent.id] - room.bets[player.id] || 0;
+  const callAmt = room.bets[opponent.id] - room.bets[player.id];
+
   if (amount < callAmt) {
     io.to(playerId).emit("message", `최소 ${callAmt}칩 이상 베팅해야 합니다.`);
     return;
   }
+
+  if (player.chips < amount) {
+    io.to(playerId).emit("message", "보유 칩보다 많이 걸 수 없습니다.");
+    return;
+  }
+
   player.chips -= amount;
   room.bets[playerId] += amount;
   room.pot += amount;
 
-  if (room.bets[playerId] === room.bets[opponent.id]) {
-    resolveRound(roomId);
-  } else {
-    room.currentTurn = 1 - room.currentTurn;
-    io.to(roomId).emit("update", {
-      players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
-      pot: room.pot,
-    });
-    io.to(room.players[room.currentTurn].id).emit("yourTurn");
+  io.to(roomId).emit("update", {
+    players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
+    pot: room.pot,
+  });
+
+  const p1 = room.players[0];
+  const p2 = room.players[1];
+  const p1Bet = room.bets[p1.id];
+  const p2Bet = room.bets[p2.id];
+
+  const isCaller = playerId !== room.lastBetter && p1Bet === p2Bet;
+  if (isCaller) {
+    return resolveRound(roomId);
   }
+
+  room.lastBetter = playerId;
+  room.currentTurn = 1 - room.currentTurn;
+  io.to(room.players[room.currentTurn].id).emit("yourTurn");
 }
 
 function handleFold(roomId, playerId) {
@@ -117,8 +140,9 @@ function handleFold(roomId, playerId) {
   const player = room.players[idx];
   const opponent = room.players[1 - idx];
   if (player.hand === 10) {
-    player.chips -= 10;
-    room.pot += 10;
+    const penalty = Math.min(10, player.chips);
+    player.chips -= penalty;
+    room.pot += penalty;
   }
   opponent.chips += room.pot;
   io.to(roomId).emit("roundResult", { winner: opponent.id, pot: room.pot });
@@ -140,8 +164,9 @@ function resolveRound(roomId) {
 
 function nextRound(roomId) {
   const room = rooms[roomId];
-  if (room.players.every((p) => p.chips > 0)) startGame(roomId);
-  else checkGameOver(roomId);
+  if (room.players.every((p) => p.chips > 0)) {
+    startGame(roomId);
+  }
 }
 
 function checkGameOver(roomId) {
