@@ -108,7 +108,7 @@ function handleBet(roomId, playerId, amount) {
   const player = room.players[idx];
   const opponent = room.players[1 - idx];
   const callAmt = room.bets[opponent.id] - room.bets[player.id];
-
+  const callGap = room.bets[player.id] + amount - room.bets[opponent.id];
   if (callGap > 0 && opponent.chips < callGap) {
     io.to(playerId).emit(
       "message",
@@ -119,7 +119,7 @@ function handleBet(roomId, playerId, amount) {
     });
     return;
   }
-  const callGap = room.bets[player.id] + amount - room.bets[opponent.id];
+
   if (amount < callAmt) {
     io.to(playerId).emit("message", `최소 ${callAmt}칩 이상 베팅해야 합니다.`);
 
