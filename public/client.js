@@ -59,3 +59,19 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("actions").style.display = "none";
   });
 });
+document.getElementById("chat-send").addEventListener("click", () => {
+  const input = document.getElementById("chat-input");
+  const message = input.value.trim();
+  if (message !== "") {
+    socket.emit("chat", message);
+    input.value = "";
+  }
+});
+
+socket.on("chat", (msg) => {
+  const box = document.getElementById("chat-box");
+  const line = document.createElement("div");
+  line.innerText = msg;
+  box.appendChild(line);
+  box.scrollTop = box.scrollHeight;
+});

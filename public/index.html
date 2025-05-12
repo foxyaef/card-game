@@ -76,6 +76,39 @@
         <button id="bet-btn">베팅</button>
         <button id="fold-btn">포기</button>
       </div>
+      <div
+        id="chat-box"
+        style="
+          height: 120px;
+          overflow-y: auto;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 10px;
+          padding: 10px;
+          margin-top: 20px;
+          font-size: 0.9rem;
+        "
+      ></div>
+      <div style="margin-top: 10px">
+        <input
+          id="chat-input"
+          type="text"
+          placeholder="메시지 입력"
+          style="width: 70%; padding: 8px; border-radius: 10px; border: none"
+        />
+        <button
+          id="chat-send"
+          style="
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: none;
+            background: #fff;
+            color: #000;
+          "
+        >
+          전송
+        </button>
+      </div>
+
       <div id="message"></div>
     </div>
   </body>

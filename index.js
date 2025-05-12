@@ -39,7 +39,14 @@ io.on("connection", (socket) => {
     };
     rooms[room.id] = room;
   }
-
+  socket.on("chat", (msg) => {
+    const room = Object.values(rooms).find((r) =>
+      r.players.some((p) => p.id === socket.id)
+    );
+    if (room) {
+      io.to(room.id).emit("chat", msg);
+    }
+  });
   room.players.push({ id: socket.id, chips: 30, hand: null });
   socket.join(room.id);
 
