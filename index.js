@@ -104,11 +104,16 @@ function handleBet(roomId, playerId, amount) {
     );
     return;
   }
-
+  const futureMyBet = room.bets[player.id] + amount;
   const player = room.players[idx];
   const opponent = room.players[1 - idx];
   const callAmt = room.bets[opponent.id] - room.bets[player.id];
   const callGap = room.bets[player.id] + amount - room.bets[opponent.id];
+
+  // ✅ sender 이름 설정
+  const senderIndex = room.players.findIndex((p) => p.id === playerId);
+  const senderName = senderIndex === 0 ? "방장" : "참여자";
+
   if (callGap > 0 && opponent.chips < callGap) {
     io.to(playerId).emit(
       "chat",
