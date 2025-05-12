@@ -14,13 +14,24 @@ socket.on("startRound", (data) => {
     (p) => p.id === myId
   ).chips;
   document.getElementById("pot").innerText = data.pot;
+
+  // 💡 칩 내역 갱신
+  document.getElementById("my-bet").innerText = data.bets[myId];
+  document.getElementById("opp-bet").innerText =
+    data.bets[data.players[oppIndex].id];
 });
 
 socket.on("update", (data) => {
-  document.getElementById("my-chips").innerText = data.players.find(
-    (p) => p.id === myId
-  ).chips;
+  const oppIndex = data.players.findIndex((p) => p.id !== myId);
+  const myIndex = data.players.findIndex((p) => p.id === myId);
+
+  document.getElementById("my-chips").innerText = data.players[myIndex].chips;
   document.getElementById("pot").innerText = data.pot;
+
+  // 💡 칩 내역 갱신
+  document.getElementById("my-bet").innerText = data.bets[myId];
+  document.getElementById("opp-bet").innerText =
+    data.bets[data.players[oppIndex].id];
 });
 
 socket.on("yourTurn", (data) => {

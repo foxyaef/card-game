@@ -131,6 +131,7 @@ function handleBet(roomId, playerId, amount) {
   io.to(roomId).emit("update", {
     players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
     pot: room.pot,
+    bets: { ...room.bets },
   });
 
   const p1 = room.players[0];
