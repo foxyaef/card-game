@@ -95,7 +95,10 @@ function handleBet(roomId, playerId, amount) {
   const room = rooms[roomId];
   const idx = room.players.findIndex((p) => p.id === playerId);
   if (idx !== room.currentTurn) {
-    io.to(playerId).emit("message", "지금은 당신의 턴이 아닙니다.");
+    io.to(playerId).emit(
+      "message",
+      "지금은 당신의 턴이 아닙니다. 기다려주세요"
+    );
     return;
   }
 
@@ -115,6 +118,9 @@ function handleBet(roomId, playerId, amount) {
 
   if (player.chips < amount) {
     io.to(playerId).emit("message", "보유 칩보다 많이 걸 수 없습니다.");
+    io.to(playerId).emit("yourTurn", {
+      opponentBet: room.bets[opponent.id],
+    });
     return;
   }
 
@@ -132,8 +138,10 @@ function handleBet(roomId, playerId, amount) {
   const p1Bet = room.bets[p1.id];
   const p2Bet = room.bets[p2.id];
 
-  const isCaller = playerId !== room.lastBetter && p1Bet === p2Bet;
-  if (isCaller) {
+  // ✅ 두 사람 베팅액이 같고, 베팅이 최소 1 이상이면 정산
+  const equalAndBothBet = p1Bet === p2Bet && p1Bet > 0;
+
+  if (equalAndBothBet) {
     return resolveRound(roomId);
   }
 
@@ -144,7 +152,7 @@ function handleBet(roomId, playerId, amount) {
   const opponentBet = room.bets[opponentId];
 
   io.to(room.players[room.currentTurn].id).emit("yourTurn", {
-    opponentBet: opponentBet,
+    opponentBet: room.bets[room.players[1 - room.currentTurn].id],
   });
 }
 
