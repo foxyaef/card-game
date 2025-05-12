@@ -127,7 +127,13 @@ function handleBet(roomId, playerId, amount) {
 
   room.lastBetter = playerId;
   room.currentTurn = 1 - room.currentTurn;
-  io.to(room.players[room.currentTurn].id).emit("yourTurn");
+  // 💡 턴 넘기면서 상대가 낸 칩 개수 전달
+  const opponentId = room.players[1 - room.currentTurn].id;
+  const opponentBet = room.bets[opponentId];
+
+  io.to(room.players[room.currentTurn].id).emit("yourTurn", {
+    opponentBet: opponentBet,
+  });
 }
 
 function handleFold(roomId, playerId) {

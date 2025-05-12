@@ -23,9 +23,14 @@ socket.on("update", (data) => {
   document.getElementById("pot").innerText = data.pot;
 });
 
-socket.on("yourTurn", () => {
+socket.on("yourTurn", (data) => {
   document.getElementById("actions").style.display = "block";
   document.getElementById("message").innerText = "🎯 당신의 턴! 베팅하세요.";
+  if (data?.opponentBet !== undefined) {
+    document.getElementById(
+      "message"
+    ).innerText += ` (상대는 ${data.opponentBet}칩 냈습니다)`;
+  }
 });
 
 socket.on("roundResult", (data) => {
