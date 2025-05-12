@@ -73,15 +73,12 @@ function startGame(roomId) {
   };
   room.lastBetter = room.players[0].id;
 
-  // 💡 상대 카드 보여줌
-  room.players.forEach((player, i) => {
-    const opponent = room.players[1 - i];
-    io.to(player.id).emit("startRound", {
-      opponentHands: [opponent.hand],
-      players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
-      pot: room.pot,
-      startPlayer: room.players[0].id,
-    });
+  // 💡 모든 유저에게 전체 opponentHands 배열 전송 (클라에서 상대만 골라서 사용)
+  io.to(roomId).emit("startRound", {
+    opponentHands: room.players.map((p) => p.hand),
+    players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
+    pot: room.pot,
+    startPlayer: room.players[0].id,
   });
 
   io.to(room.players[0].id).emit("yourTurn");
