@@ -104,20 +104,15 @@ function handleBet(roomId, playerId, amount) {
     );
     return;
   }
-  const futureMyBet = room.bets[player.id] + amount;
+
   const player = room.players[idx];
   const opponent = room.players[1 - idx];
   const callAmt = room.bets[opponent.id] - room.bets[player.id];
   const callGap = room.bets[player.id] + amount - room.bets[opponent.id];
-
-  // ✅ sender 이름 설정
-  const senderIndex = room.players.findIndex((p) => p.id === playerId);
-  const senderName = senderIndex === 0 ? "방장" : "참여자";
-
   if (callGap > 0 && opponent.chips < callGap) {
     io.to(playerId).emit(
-      "chat",
-      `[시스템] ${senderName}의 베팅은 무효: 상대가 종료를 위해 ${callGap}칩이 필요하지만, 현재 ${opponent.chips}칩만 보유하고 있어 콜할 수 없습니다.`
+      "message",
+      `상대방이 ${callGap}칩을 낼 수 없어 게임을 종료시킬 수 없습니다.`
     );
     io.to(playerId).emit("yourTurn", {
       opponentBet: room.bets[opponent.id],
