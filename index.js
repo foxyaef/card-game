@@ -98,6 +98,11 @@ function handleBet(roomId, playerId, amount) {
 
   if (amount < callAmt) {
     io.to(playerId).emit("message", `최소 ${callAmt}칩 이상 베팅해야 합니다.`);
+
+    io.to(playerId).emit("yourTurn", {
+      opponentBet: room.bets[opponent.id],
+    });
+
     return;
   }
 
