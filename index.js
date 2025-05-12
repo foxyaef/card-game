@@ -44,7 +44,10 @@ io.on("connection", (socket) => {
       r.players.some((p) => p.id === socket.id)
     );
     if (room) {
-      io.to(room.id).emit("chat", msg);
+      const senderIndex = room.players.findIndex((p) => p.id === socket.id);
+      const senderName = senderIndex === 0 ? "방장" : "참여자";
+
+      io.to(room.id).emit("chat", `[${senderName}] ${msg}`);
     }
   });
   room.players.push({ id: socket.id, chips: 30, hand: null });
