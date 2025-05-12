@@ -4,6 +4,7 @@ let myId;
 socket.on("connect", () => (myId = socket.id));
 
 socket.on("startRound", (data) => {
+  document.getElementById("actions").style.display = "none";
   const oppIndex = data.players.findIndex((p) => p.id !== myId);
   document.getElementById("opp-card").innerText = data.opponentHands[oppIndex];
   document.getElementById("my-chips").innerText = data.players.find(
@@ -35,13 +36,19 @@ socket.on("gameOver", (data) => {
   else alert("게임 패배...");
 });
 
+socket.on("message", (msg) => {
+  document.getElementById("message").innerText = msg;
+});
+
 // 버튼 이벤트
 window.addEventListener("DOMContentLoaded", () => {
   document.getElementById("bet-btn").addEventListener("click", () => {
     const amt = parseInt(document.getElementById("bet-amount").value, 10);
     socket.emit("bet", amt);
+    document.getElementById("actions").style.display = "none";
   });
   document.getElementById("fold-btn").addEventListener("click", () => {
     socket.emit("fold");
+    document.getElementById("actions").style.display = "none";
   });
 });

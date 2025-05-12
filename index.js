@@ -65,7 +65,7 @@ function startGame(roomId) {
     p.chips -= 1;
     room.pot += 1;
   });
-  room.currentTurn = 0;
+  room.currentTurn = 0; // 선 플레이어부터
   room.bets = { [room.players[0].id]: 0, [room.players[1].id]: 0 };
 
   io.to(roomId).emit("startRound", {
@@ -73,23 +73,36 @@ function startGame(roomId) {
     players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
     pot: room.pot,
   });
+  // 첫 턴 알림
   io.to(room.players[room.currentTurn].id).emit("yourTurn");
 }
 
 function handleBet(roomId, playerId, amount) {
   const room = rooms[roomId];
-  const player = room.players.find((p) => p.id === playerId);
-  const opponent = room.players.find((p) => p.id !== playerId);
-  const callAmt = room.bets[opponent.id] - room.bets[playerId];
-  if (amount < callAmt) return;
+  const playerIndex = room.players.findIndex((p) => p.id === playerId);
+  // 턴제 확인
+  if (playerIndex !== room.currentTurn) {
+    io.to(playerId).emit("message", "지금은 당신의 턴이 아닙니다.");
+    return;
+  }
+  const player = room.players[playerIndex];
+  const opponent = room.players[1 - playerIndex];
+  const callAmt = room.bets[opponent.id] - room.bets[playerId] || 0;
+  if (amount < callAmt) {
+    io.to(playerId).emit("message", `최소 ${callAmt}칩 이상 베팅해야 합니다.`);
+    return;
+  }
 
   player.chips -= amount;
   room.bets[playerId] += amount;
   room.pot += amount;
 
-  if (room.bets[playerId] === room.bets[opponent.id]) resolveRound(roomId);
-  else {
-    room.currentTurn ^= 1;
+  if (room.bets[playerId] === room.bets[opponent.id]) {
+    // 베팅 종료
+    resolveRound(roomId);
+  } else {
+    // 턴 넘기기
+    room.currentTurn = 1 - room.currentTurn;
     io.to(roomId).emit("update", {
       players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
       pot: room.pot,
@@ -100,16 +113,23 @@ function handleBet(roomId, playerId, amount) {
 
 function handleFold(roomId, playerId) {
   const room = rooms[roomId];
-  const player = room.players.find((p) => p.id === playerId);
-  const opponent = room.players.find((p) => p.id !== playerId);
+  const playerIndex = room.players.findIndex((p) => p.id === playerId);
+  // 턴제 확인
+  if (playerIndex !== room.currentTurn) {
+    io.to(playerId).emit("message", "지금은 당신의 턴이 아닙니다.");
+    return;
+  }
+  const player = room.players[playerIndex];
+  const opponent = room.players[1 - playerIndex];
 
+  // 10 패널티 처리
   if (player.hand === 10) {
     player.chips -= 10;
     room.pot += 10;
   }
   opponent.chips += room.pot;
   io.to(roomId).emit("roundResult", { winner: opponent.id, pot: room.pot });
-  checkGameOver(roomId);
+  checkGameOver(roomId) || nextRound(roomId);
 }
 
 function resolveRound(roomId) {
@@ -122,11 +142,12 @@ function resolveRound(roomId) {
   const winner = p1.hand > p2.hand ? p1 : p2;
   winner.chips += room.pot;
   io.to(roomId).emit("roundResult", { winner: winner.id, pot: room.pot });
-  checkGameOver(roomId);
+  checkGameOver(roomId) || nextRound(roomId);
 }
 
 function nextRound(roomId) {
   const room = rooms[roomId];
+  // 잔여 칩 확인 후 게임 계속 또는 종료
   if (room.players.every((p) => p.chips > 0)) startGame(roomId);
   else checkGameOver(roomId);
 }
@@ -138,7 +159,9 @@ function checkGameOver(roomId) {
     const winner = room.players.find((p) => p.chips > 0);
     io.to(roomId).emit("gameOver", { winner: winner.id });
     delete rooms[roomId];
+    return true;
   }
+  return false;
 }
 
 server.listen(PORT, () => console.log(`Listening on ${PORT}`));
