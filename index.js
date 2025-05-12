@@ -39,6 +39,7 @@ io.on("connection", (socket) => {
     };
     rooms[room.id] = room;
   }
+
   room.players.push({ id: socket.id, chips: 30, hand: null });
   socket.join(room.id);
 
@@ -64,24 +65,26 @@ function startGame(roomId) {
     room.pot += 1;
   });
 
-  room.currentTurn = Math.floor(Math.random() * 2);
+  // 💡 항상 방장이 선턴
+  room.currentTurn = 0;
   room.bets = {
     [room.players[0].id]: 0,
     [room.players[1].id]: 0,
   };
-  room.lastBetter = room.players[room.currentTurn].id;
+  room.lastBetter = room.players[0].id;
 
+  // 💡 상대 카드 보여줌
   room.players.forEach((player, i) => {
     const opponent = room.players[1 - i];
     io.to(player.id).emit("startRound", {
       opponentHands: [opponent.hand],
       players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
       pot: room.pot,
-      startPlayer: room.players[room.currentTurn].id,
+      startPlayer: room.players[0].id,
     });
   });
 
-  io.to(room.players[room.currentTurn].id).emit("yourTurn");
+  io.to(room.players[0].id).emit("yourTurn");
 }
 
 function handleBet(roomId, playerId, amount) {
