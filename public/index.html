@@ -2,21 +2,81 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <title>카드 배팅 게임</title>
+    <title>⚡ Card Betting Game ⚡</title>
     <script src="/socket.io/socket.io.js"></script>
     <script src="client.js" defer></script>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        height: 100vh;
+        background: linear-gradient(135deg, #ff4e50, #f9d423);
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .container {
+        background: rgba(0, 0, 0, 0.4);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+        text-align: center;
+        width: 320px;
+      }
+      h2 {
+        margin: 15px 0;
+        font-size: 1.2rem;
+      }
+      #opp-card {
+        font-size: 3rem;
+        text-shadow: 0 0 10px #fff;
+      }
+      #actions input,
+      #actions button {
+        margin: 8px 5px;
+        padding: 12px;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        outline: none;
+        transition: transform 0.2s;
+      }
+      #actions input:hover,
+      #actions button:hover {
+        transform: scale(1.1);
+        cursor: pointer;
+      }
+      #bet-btn {
+        background: #00c853;
+        color: #000;
+      }
+      #fold-btn {
+        background: #d50000;
+        color: #000;
+      }
+      #message {
+        margin-top: 15px;
+        height: 24px;
+        font-weight: bold;
+      }
+    </style>
   </head>
   <body>
-    <h2>내 칩: <span id="my-chips">0</span></h2>
-    <h2>상대 카드: <span id="opp-card">?</span></h2>
-    <h2>팟: <span id="pot">0</span></h2>
+    <div class="container">
+      <h2>내 칩: <span id="my-chips">0</span></h2>
+      <h2>상대 카드: <span id="opp-card">?</span></h2>
+      <h2>팟: <span id="pot">0</span></h2>
 
-    <div id="actions" style="display: none">
-      <input type="number" id="bet-amount" min="1" placeholder="베팅 칩 수" />
-      <button id="bet-btn">베팅</button>
-      <button id="fold-btn">포기</button>
+      <div id="actions" style="display: none">
+        <input type="number" id="bet-amount" min="1" placeholder="베팅" />
+        <button id="bet-btn">베팅</button>
+        <button id="fold-btn">포기</button>
+      </div>
+      <div id="message"></div>
     </div>
-
-    <div id="message"></div>
   </body>
 </html>
