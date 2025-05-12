@@ -111,8 +111,8 @@ function handleBet(roomId, playerId, amount) {
   const callGap = room.bets[player.id] + amount - room.bets[opponent.id];
   if (callGap > 0 && opponent.chips < callGap) {
     io.to(playerId).emit(
-      "message",
-      `상대방이 ${callGap}칩을 낼 수 없어 게임을 종료시킬 수 없습니다.`
+      "chat",
+      `[시스템] ${senderName}의 베팅은 무효: 상대가 종료를 위해 ${callGap}칩이 필요하지만, 현재 ${opponent.chips}칩만 보유하고 있어 콜할 수 없습니다.`
     );
     io.to(playerId).emit("yourTurn", {
       opponentBet: room.bets[opponent.id],
