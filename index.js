@@ -1,13 +1,13 @@
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
+const express = require('express');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static("public"));
+app.use(express.static('public'));
 
 function createDeck() {
   const deck = [];
@@ -26,17 +26,10 @@ function shuffle(deck) {
 
 const rooms = {};
 
-io.on("connection", (socket) => {
-  let room = Object.values(rooms).find((r) => r.players.length === 1);
+i o.on('connection', (socket) => {
+  let room = Object.values(rooms).find(r => r.players.length === 1);
   if (!room) {
-    room = {
-      id: socket.id,
-      players: [],
-      deck: [],
-      pot: 0,
-      bets: {},
-      state: "waiting",
-    };
+    room = { id: socket.id, players: [], deck: [], pot: 0, bets: {}, state: 'waiting' };
     rooms[room.id] = room;
   }
   room.players.push({ id: socket.id, chips: 30, hand: null });
@@ -44,51 +37,53 @@ io.on("connection", (socket) => {
 
   if (room.players.length === 2) startGame(room.id);
 
-  socket.on("bet", (amount) => handleBet(room.id, socket.id, amount));
-  socket.on("fold", () => handleFold(room.id, socket.id));
-  socket.on("disconnect", () => {
+  socket.on('bet', (amount) => handleBet(room.id, socket.id, amount));
+  socket.on('fold', () => handleFold(room.id, socket.id));
+  socket.on('disconnect', () => {
     delete rooms[room.id];
   });
 });
 
-function startGame(roomId) {
+// 서버 라운드 시작 함수: carryPot 으로 이월 팟 반영
+function startGame(roomId, carryPot = 0) {
   const room = rooms[roomId];
   room.deck = createDeck();
   shuffle(room.deck);
-  room.pot = 0;
-  room.state = "round";
+  room.pot = carryPot; // 이월된 팟 초기화
+  room.state = 'round';
 
-  room.players.forEach((p) => {
+  room.players.forEach(p => {
     p.hand = room.deck.pop();
     p.chips -= 1;
     room.pot += 1;
   });
 
-  // 랜덤으로 선 플레이어 결정 (0 또는 1)
+  // 변경: 랜덤으로 선턴 결정
   room.currentTurn = Math.floor(Math.random() * 2);
   room.bets = { [room.players[0].id]: 0, [room.players[1].id]: 0 };
 
-  io.to(roomId).emit("startRound", {
-    opponentHands: room.players.map((p) => p.hand),
-    players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
+  io.to(roomId).emit('startRound', {
+    opponentHands: room.players.map(p => p.hand),
+    players: room.players.map(p => ({ id: p.id, chips: p.chips })),
     pot: room.pot,
-    startPlayer: room.players[room.currentTurn].id,
+    startPlayer: room.players[room.currentTurn].id
   });
-  io.to(room.players[room.currentTurn].id).emit("yourTurn");
+  io.to(room.players[room.currentTurn].id).emit('yourTurn');
 }
 
 function handleBet(roomId, playerId, amount) {
   const room = rooms[roomId];
-  const idx = room.players.findIndex((p) => p.id === playerId);
+  const idx = room.players.findIndex(p => p.id === playerId);
   if (idx !== room.currentTurn) {
-    io.to(playerId).emit("message", "지금은 당신의 턴이 아닙니다.");
+    io.to(playerId).emit('message', '지금은 당신의 턴이 아닙니다.');
     return;
   }
   const player = room.players[idx];
   const opponent = room.players[1 - idx];
-  const callAmt = room.bets[opponent.id] - room.bets[player.id] || 0;
+  // 변경: 이전 배팅 금액(callAmt) 이하 베팅 방지
+  const callAmt = (room.bets[opponent.id] - room.bets[player.id]) || 0;
   if (amount < callAmt) {
-    io.to(playerId).emit("message", `최소 ${callAmt}칩 이상 베팅해야 합니다.`);
+    io.to(playerId).emit('message', `최소 ${callAmt}칩 이상 베팅해야 합니다.`);
     return;
   }
   player.chips -= amount;
@@ -99,19 +94,19 @@ function handleBet(roomId, playerId, amount) {
     resolveRound(roomId);
   } else {
     room.currentTurn = 1 - room.currentTurn;
-    io.to(roomId).emit("update", {
-      players: room.players.map((p) => ({ id: p.id, chips: p.chips })),
-      pot: room.pot,
+    io.to(roomId).emit('update', {
+      players: room.players.map(p => ({ id: p.id, chips: p.chips })),
+      pot: room.pot
     });
-    io.to(room.players[room.currentTurn].id).emit("yourTurn");
+    io.to(room.players[room.currentTurn].id).emit('yourTurn');
   }
 }
 
 function handleFold(roomId, playerId) {
   const room = rooms[roomId];
-  const idx = room.players.findIndex((p) => p.id === playerId);
+  const idx = room.players.findIndex(p => p.id === playerId);
   if (idx !== room.currentTurn) {
-    io.to(playerId).emit("message", "지금은 당신의 턴이 아닙니다.");
+    io.to(playerId).emit('message', '지금은 당신의 턴이 아닙니다.');
     return;
   }
   const player = room.players[idx];
@@ -121,7 +116,7 @@ function handleFold(roomId, playerId) {
     room.pot += 10;
   }
   opponent.chips += room.pot;
-  io.to(roomId).emit("roundResult", { winner: opponent.id, pot: room.pot });
+  io.to(roomId).emit('roundResult', { winner: opponent.id, pot: room.pot });
   checkGameOver(roomId) || nextRound(roomId);
 }
 
@@ -129,27 +124,29 @@ function resolveRound(roomId) {
   const room = rooms[roomId];
   const [p1, p2] = room.players;
   if (p1.hand === p2.hand) {
-    io.to(roomId).emit("roundResult", { tie: true, pot: room.pot });
+    io.to(roomId).emit('roundResult', { tie: true, pot: room.pot });
     return nextRound(roomId);
   }
   const winner = p1.hand > p2.hand ? p1 : p2;
   winner.chips += room.pot;
-  io.to(roomId).emit("roundResult", { winner: winner.id, pot: room.pot });
+  io.to(roomId).emit('roundResult', { winner: winner.id, pot: room.pot });
   checkGameOver(roomId) || nextRound(roomId);
 }
 
 function nextRound(roomId) {
   const room = rooms[roomId];
-  if (room.players.every((p) => p.chips > 0)) startGame(roomId);
-  else checkGameOver(roomId);
+  if (room.players.every(p => p.chips > 0)) {
+    // 변경: 무승부 시 이월된 팟을 carryPot로 전달
+    startGame(roomId, room.pot);
+  } else checkGameOver(roomId);
 }
 
 function checkGameOver(roomId) {
   const room = rooms[roomId];
-  const loser = room.players.find((p) => p.chips <= 0);
+  const loser = room.players.find(p => p.chips <= 0);
   if (loser) {
-    const winner = room.players.find((p) => p.chips > 0);
-    io.to(roomId).emit("gameOver", { winner: winner.id });
+    const winner = room.players.find(p => p.chips > 0);
+    io.to(roomId).emit('gameOver', { winner: winner.id });
     delete rooms[roomId];
     return true;
   }
