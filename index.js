@@ -205,8 +205,7 @@ function resolveRound(roomId) {
   }
   const winner = p1.hand > p2.hand ? p1 : p2;
   winner.chips += room.pot;
-  io.to(roomId).emit("roundResult", { winner: winner.id, pot: room.pot });
-  checkGameOver(roomId) || nextRound(roomId);
+
   const hostCard = room.players[0].hand;
   const guestCard = room.players[1].hand;
 
@@ -214,6 +213,9 @@ function resolveRound(roomId) {
     "chat",
     `[라운드 결과] 방장: ${hostCard}, 참여자: ${guestCard}`
   );
+
+  io.to(roomId).emit("roundResult", { winner: winner.id, pot: room.pot });
+  checkGameOver(roomId) || nextRound(roomId);
 }
 
 function nextRound(roomId) {
